@@ -3,7 +3,7 @@ import cors from 'cors';
 import logger from './middlewares/logger';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 
 app.use(cors());
