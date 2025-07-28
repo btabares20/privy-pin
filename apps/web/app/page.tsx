@@ -1,102 +1,134 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+"use client";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import { useEffect, useRef, useState } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import debounce from "lodash.debounce";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const allPinsRef = useRef([]);
+  const dropPinModeRef = useRef(false); 
+  const [, forceRerender] = useState(false); 
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
+  const clearMarkers = () => {
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+  };
+
+  const addVisibleMarkers = (map) => {
+    const bounds = map.getBounds();
+
+    const visiblePins = allPinsRef.current.filter((pin) => {
+      return (
+        pin.lng >= bounds.getWest() &&
+        pin.lng <= bounds.getEast() &&
+        pin.lat >= bounds.getSouth() &&
+        pin.lat <= bounds.getNorth()
+      );
+    });
+
+    clearMarkers();
+
+    visiblePins.forEach((pin) => {
+      const marker = new maplibregl.Marker()
+        .setLngLat([pin.lng, pin.lat])
+        .setPopup(
+          new maplibregl.Popup().setHTML(
+            `<div style="font-weight: bold; color: #2f3542">${pin.name}</div>`
+          )
+        )
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+  };
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    const initMap = (lng, lat) => {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`, 
+        center: [lng, lat],
+        zoom: 13,
+      });
+
+      mapRef.current = map;
+
+      map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+      map.addControl(
+        new maplibregl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true,
+          showUserHeading: true,
+        }),
+        "top-right"
+      );
+
+      map.on("click", (e) => { if (!dropPinModeRef.current) return;
+
+        const name = prompt("Enter a name for this pin:");
+        if (!name) return;
+
+        const newPin = {
+          name,
+          lng: e.lngLat.lng,
+          lat: e.lngLat.lat,
+        };
+
+        allPinsRef.current.push(newPin);
+        addVisibleMarkers(map);
+        dropPinModeRef.current = false;
+        forceRerender((prev) => !prev);
+      });
+
+      const updateMarkers = debounce(() => addVisibleMarkers(map), 300);
+      map.on("moveend", updateMarkers);
+
+      addVisibleMarkers(map);
+    };
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            initMap(longitude, latitude);
+        },
+        (err) => {
+            console.warn("Geolocation failed or denied:", err);
+            initMap(120.9842, 14.5995); // Manila
+        }
+    );
+  }, []);
+
+  return (
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+
+      <button
+        onClick={() => {
+          dropPinModeRef.current = !dropPinModeRef.current;
+          forceRerender((prev) => !prev); 
+        }}
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          zIndex: 1,
+          padding: "10px 16px",
+          background: dropPinModeRef.current ? "#2ecc71" : "#1e90ff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontWeight: "bold",
+        }}
+      >
+        {dropPinModeRef.current ? "Click a spot…" : "Drop a Pin"}
+      </button>
     </div>
   );
 }
