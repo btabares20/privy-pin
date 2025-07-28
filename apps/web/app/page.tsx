@@ -54,7 +54,7 @@ export default function Home() {
       setApiError(null);
       
       // Replace this URL with your actual API endpoint
-      const apiUrl = `http://localhost:3001/api/toilets/nearby?swLong=${swLong}&swLat=${swLat}&neLong=${neLong}&neLat=${neLat}`;
+      const apiUrl = `http://192.168.6.196:3001/api/toilets/nearby?swLong=${swLong}&swLat=${swLat}&neLong=${neLong}&neLat=${neLat}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -183,7 +183,6 @@ export default function Home() {
 
       // Debounced function to handle map movement
       const debouncedMapMove = debounce(() => handleMapMove(map), 500);
-
       // Call API on map movement
       map.on("moveend", debouncedMapMove);
 
