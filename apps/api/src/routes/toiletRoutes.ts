@@ -1,12 +1,14 @@
 import express from 'express';
-import { createToilet, getToilets, deleteToilet, updateToilet, getToilet } from '../controllers/toiletController';
+import { getToilets, deleteToilet, updateToilet, getToilet, getNearbyToilets, createToiletBatch } from '../controllers/toiletController';
 
 const router = express.Router();
 
+router.get('/nearby', getNearbyToilets);
 router.get('/', getToilets);
+
 router.get('/:id', getToilet);
 router.patch('/:id', updateToilet);
-router.post('/', createToilet);
+router.post('/', createToiletBatch);
 router.delete('/:id', deleteToilet);
 
 export default router;
