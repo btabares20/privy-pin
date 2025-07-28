@@ -67,26 +67,33 @@ const router = express.Router();
  *     tags: [Toilets]
  *     parameters:
  *       - in: query
- *         name: longitude
+ *         name: swLong 
  *         required: true
  *         schema:
  *           type: number
- *         description: Longitude coordinate
+ *         description: South West Longitude coordinate
  *         example: 121.0244
  *       - in: query
- *         name: latitude
+ *         name: swLat  
  *         required: true
  *         schema:
  *           type: number
- *         description: Latitude coordinate
+ *         description: South West Latitude coordinate
  *         example: 14.5547
  *       - in: query
- *         name: maxDistance
- *         required: false
+ *         name: neLong
+ *         required: true
  *         schema:
  *           type: number
- *         description: Maximum distance in meters (default varies by implementation)
- *         example: 1000
+ *         description: North East Longitude coordinate
+ *         example: 121.0244
+ *       - in: query
+ *         name: neLat 
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: North East Latitude coordinate
+ *         example: 14.5547
  *     responses:
  *       200:
  *         description: List of nearby toilets
