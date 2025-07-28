@@ -25,17 +25,21 @@ export const deleteToiletById = async (_id: String) => {
     return await ToiletModel.findByIdAndDelete(_id);
 };
 
-export const createToiletsNearby = ($geometry: ToiletLocation, $maxDistance: number): ToiletsNearby => {
+export const createToiletsNearby = (SWLongitude: number, SWLatitude: number, NELongitude: number, NELatitude: number): ToiletsNearby => {
     return {
         location: {
-            $near: { $geometry, $maxDistance },
+            $geoWithin: { 
+                $box: [
+                   [SWLongitude, SWLatitude],
+                   [NELongitude, NELatitude] 
+                ]
+            }
         }
     }
 }
-export const findNearbyToilets = async (coordinates: [number, number], maxDistance: number) => {
-    const locationToSearch: ToiletsNearby = createToiletsNearby({
-        type: "Point",
-        coordinates: coordinates
-    }, maxDistance);
+export const findNearbyToilets = async (SWLongitude: number, SWLatitude: number, NELongitude: number, NELatitude: number) => {
+    const locationToSearch: ToiletsNearby = createToiletsNearby(
+       SWLongitude, SWLatitude, NELongitude, NELatitude 
+    );
     return await ToiletModel.find(locationToSearch);
 };

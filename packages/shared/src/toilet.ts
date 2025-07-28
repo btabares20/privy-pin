@@ -12,10 +12,12 @@ export interface Toilet {
 
 export interface ToiletsNearby {
     location: {
-        $near: {
-            $geometry: ToiletLocation,
-            $maxDistance: number
-        },
+        $geoWithin: {
+            $box: [
+                [number, number],
+                [number, number]
+            ] 
+        }
     }
 }
 

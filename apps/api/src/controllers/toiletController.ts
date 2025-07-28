@@ -81,17 +81,8 @@ export const deleteToilet = async (req: Request, res: Response) => {
 
 export const getNearbyToilets = async (req: Request, res: Response) => {
     try {
-        const { longitude, latitude, maxDistance } = req.query
-        if (!longitude || !latitude) {
-            return res.status(400).json({
-                message: "longitude and latitude query parameters are required"
-            });
-        }
-        
-        const coords: [number, number] = [Number(longitude), Number(latitude)];
-        const distance = Number(maxDistance);
-        
-        const nearbyToilets = await toiletService.findNearbyToilets(coords, distance);
+        const { swLong, swLat, neLong, neLat} = req.query
+        const nearbyToilets = await toiletService.findNearbyToilets(Number(swLong), Number(swLat), Number(neLong), Number(neLat));
         
         if (nearbyToilets.length === 0) {
             return res.status(404).json({message: "No nearby toilets found"});
