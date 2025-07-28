@@ -5,11 +5,17 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import debounce from "lodash.debounce";
 
+interface Pin {
+  name: string;
+  lng: number;
+  lat: number;
+}
+
 export default function Home() {
-  const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
-  const markersRef = useRef([]);
-  const allPinsRef = useRef([]);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map| null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
+  const allPinsRef = useRef<Pin[]>([]);
   const dropPinModeRef = useRef(false); 
   const [, forceRerender] = useState(false); 
 
@@ -18,10 +24,10 @@ export default function Home() {
     markersRef.current = [];
   };
 
-  const addVisibleMarkers = (map) => {
+  const addVisibleMarkers = (map: maplibregl.Map) => {
     const bounds = map.getBounds();
 
-    const visiblePins = allPinsRef.current.filter((pin) => {
+    const visiblePins = allPinsRef.current.filter((pin: Pin) => {
       return (
         pin.lng >= bounds.getWest() &&
         pin.lng <= bounds.getEast() &&
@@ -32,7 +38,7 @@ export default function Home() {
 
     clearMarkers();
 
-    visiblePins.forEach((pin) => {
+    visiblePins.forEach((pin: Pin) => {
       const marker = new maplibregl.Marker()
         .setLngLat([pin.lng, pin.lat])
         .setPopup(
@@ -47,9 +53,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    const initMap = (lng, lat) => {
+    const initMap = (lng: number, lat: number) => {
+      if (!mapContainerRef.current) return;
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
         style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`, 
@@ -65,7 +70,6 @@ export default function Home() {
         new maplibregl.GeolocateControl({
           positionOptions: { enableHighAccuracy: true },
           trackUserLocation: true,
-          showUserHeading: true,
         }),
         "top-right"
       );
@@ -75,7 +79,7 @@ export default function Home() {
         const name = prompt("Enter a name for this pin:");
         if (!name) return;
 
-        const newPin = {
+        const newPin: Pin = {
           name,
           lng: e.lngLat.lng,
           lat: e.lngLat.lat,
@@ -102,7 +106,7 @@ export default function Home() {
             initMap(120.9842, 14.5995); // Manila
         }
     );
-  }, []);
+  });
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
