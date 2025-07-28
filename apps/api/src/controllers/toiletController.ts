@@ -55,6 +55,16 @@ export const createToilet = async (req: Request, res: Response) => {
     }
 }
 
+export const createToiletBatch = async (req: Request, res: Response) => {
+    const toiletPayload: Toilet[] = req.body
+    try {
+        const newToilet = await toiletService.createNewToiletBatch(toiletPayload);
+        res.status(200).json(newToilet);
+    } catch (error) {
+        res.status(500).json({message: "Error creating toilet"});
+    }
+}
+
 export const deleteToilet = async (req: Request, res: Response) => {
     try {
         const _id = req.params.id;
@@ -66,5 +76,29 @@ export const deleteToilet = async (req: Request, res: Response) => {
         res.status(204).end();
     } catch (error) {
         res.status(500).json({message: "Error deleting toilet"});
+    }
+}
+
+export const getNearbyToilets = async (req: Request, res: Response) => {
+    try {
+        const { longitude, latitude, maxDistance } = req.query
+        if (!longitude || !latitude) {
+            return res.status(400).json({
+                message: "longitude and latitude query parameters are required"
+            });
+        }
+        
+        const coords: [number, number] = [Number(longitude), Number(latitude)];
+        const distance = Number(maxDistance);
+        
+        const nearbyToilets = await toiletService.findNearbyToilets(coords, distance);
+        
+        if (nearbyToilets.length === 0) {
+            return res.status(404).json({message: "No nearby toilets found"});
+        }
+        
+        res.status(200).json(nearbyToilets);
+    } catch (error) {
+        res.status(500).json({message: "Error finding nearby toilets: "+ error});
     }
 }
