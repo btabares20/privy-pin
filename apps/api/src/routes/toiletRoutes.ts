@@ -60,7 +60,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/toilets/nearby:
+ * /toilets/nearby:
  *   get:
  *     summary: Find nearby toilets
  *     description: Retrieve toilets within a specified distance from given coordinates
@@ -123,7 +123,7 @@ router.get('/nearby', getNearbyToilets);
 
 /**
  * @swagger
- * /api/toilets/batch:
+ * /toilets/batch:
  *   post:
  *     summary: Create multiple toilets
  *     description: Create multiple toilet records in a single request
@@ -176,7 +176,7 @@ router.post('/batch', createToiletBatch);
 
 /**
  * @swagger
- * /api/toilets:
+ * /toilets:
  *   get:
  *     summary: Get all toilets
  *     description: Retrieve a list of all toilet records
@@ -248,7 +248,7 @@ router.get('/', getToilets);
 
 /**
  * @swagger
- * /api/toilets/{id}:
+ * /toilets/{id}:
  *   get:
  *     summary: Get toilet by ID
  *     description: Retrieve a specific toilet record by its ID
