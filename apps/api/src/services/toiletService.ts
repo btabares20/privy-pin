@@ -37,6 +37,5 @@ export const findNearbyToilets = async (coordinates: [number, number], maxDistan
         type: "Point",
         coordinates: coordinates
     }, maxDistance);
-    console.log(locationToSearch);
     return await ToiletModel.find(locationToSearch);
 };
