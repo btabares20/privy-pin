@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import debounce from "lodash.debounce";
+import { Toilet } from "@repo/shared/toilet";
 
 // Define types based on your API response
 interface Location {
@@ -19,14 +20,17 @@ interface ApiPin {
     __v: number;
 }
 
-interface Pin {
+interface PinPayload {
     name: string;
     lng: number;
     lat: number;
+}
+interface Pin extends PinPayload{
     id: string; // Added ID for better tracking
 }
 
 type ApiResponse = ApiPin[]; // Your API returns an array directly
+type ApiSingleResponse = ApiPin;
 
 export default function Home() {
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -98,6 +102,34 @@ export default function Home() {
             setLoading(false);
         }
     };
+    
+    const createNewPin = async (pin: PinPayload):Promise<Pin> => {
+        const newPin: Toilet = {
+            name: pin.name,
+            location: {
+                type: 'Point',
+                coordinates: [ pin.lng, pin.lat ]
+            }
+        }
+        const apiUrl = "http://192.168.6.196:3001/api/toilets";
+            const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newPin)
+        });
+        const data: ApiSingleResponse = await response.json();
+        console.log(`Created new Pin: ${data}`);
+        const createdPin: Pin = {
+            name: pin.name,
+            lng: pin.lng,
+            lat: pin.lat,
+            id: data._id
+        }
+        console.log(`Created new Pin: ${data}`);
+        return createdPin;
+    };
 
 
 
@@ -163,21 +195,21 @@ export default function Home() {
                 "top-right"
             );
 
-            map.on("click", (e: maplibregl.MapMouseEvent) => {
+            map.on("click", async (e: maplibregl.MapMouseEvent) => {
                 if (!dropPinModeRef.current) return;
 
                 const name = prompt("Enter a name for this pin:");
                 if (!name) return;
-
+                
                 const newPin: Pin = {
                     name,
-                    lng: e.lngLat.lng,
-                    lat: e.lngLat.lat,
-                    id: `user_pin_${Date.now()}`, // Generate a temporary ID
-                };
-
+                    lng:e.lngLat.lng, 
+                    lat:e.lngLat.lat,
+                }
+                
                 // Add to local pins (you might want to also save this to your API)
-                allPinsRef.current.push(newPin);
+                const createdPin = await createNewPin(newPin);
+                allPinsRef.current.push(createdPin);
                 addVisibleMarkers(map);
                 setDropPinMode(false);
             });
