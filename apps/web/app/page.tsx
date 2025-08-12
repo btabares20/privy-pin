@@ -58,7 +58,7 @@ export default function Home() {
             setApiError(null);
 
             // Replace this URL with your actual API endpoint
-            const apiUrl = `http://192.168.6.196:3001/api/toilets/nearby?swLong=${swLong}&swLat=${swLat}&neLong=${neLong}&neLat=${neLat}`;
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/toilets/nearby?swLong=${swLong}&swLat=${swLat}&neLong=${neLong}&neLat=${neLat}`;
 
                 const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -111,7 +111,7 @@ export default function Home() {
                 coordinates: [ pin.lng, pin.lat ]
             }
         }
-        const apiUrl = "http://192.168.6.196:3001/api/toilets";
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/toilets`;
             const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
